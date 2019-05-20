@@ -78,7 +78,7 @@ def evaluate(val_loader, model, logger, args):
             epe2ds.update(EPE2D)
             acc2ds.update(acc2d)
 
-            if i % args.print_freq == 0 and not args.debug:
+            if i % args.print_freq == 0:
                 logger.log('Test: [{0}/{1}]\t'
                            'EPE3D {epe3d_.val:.4f} ({epe3d_.avg:.4f})\t'
                            'ACC3DS {acc3d_s.val:.4f} ({acc3d_s.avg:.4f})\t'
