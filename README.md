@@ -8,8 +8,13 @@ Our model is trained and tested under:
 * PyTorch (torch == 0.4.0)
 * Numba (numba == 0.38.1)
 * You may need to install cffi.
-* Mayavi for visualization. Installation on Ubuntu:
+* Mayavi for visualization. 
+
+* Installation on Ubuntu:
 ```bash
+pip3 install https://download.pytorch.org/whl/cu90/torch-0.4.0-cp35-cp35m-linux_x86_64.whl
+pip3 install numba
+pip3 install cffi
 sudo apt-get -y install python-vtk
 sudo pip3 install mayavi
 sudo apt-get install python3-pyqt5
