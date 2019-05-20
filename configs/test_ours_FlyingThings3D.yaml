@@ -1,0 +1,46 @@
+ckpt_dir: checkpoints/test/ours_FlyingThings3DSubset
+resume: trained_models/ours.pth.tar
+evaluate: True
+
+unsymmetric: True
+
+arch: HPLFlowNet
+last_relu: False
+allow_less_points: True
+
+use_leaky: True
+bcn_use_bias: True
+bcn_use_norm: True
+
+batch_size: 1
+
+scales_filter_map: [[3., 1, -1, -1],
+                    [2., 1, -1, -1],
+                    [1., 1, 1, 1],
+                    [0.5, 1, 1, 1],
+                    [0.25, 1, 1, 1],
+                    [0.125, 1, 1, 1],
+                    [0.0625, 1, 1, 1],
+                    ]
+
+dim: 3
+num_points: 8192
+
+
+DEVICE: cuda
+
+dataset: FlyingThings3DSubset
+
+data_process:
+  DEPTH_THRESHOLD: 35.
+  NO_CORR: True
+
+print_freq: 50
+workers: 8
+
+
+
+
+
+
+

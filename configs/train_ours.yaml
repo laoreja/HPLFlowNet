@@ -1,0 +1,68 @@
+ckpt_dir: checkpoints/train/ours
+resume: False
+
+arch: HPLFlowNet
+last_relu: False
+allow_less_points: False
+
+use_leaky: True
+bcn_use_bias: True
+bcn_use_norm: True
+
+custom_lr: True
+lr_switch_epochs: "0,110,220,260,300,340,380,420,615,700"
+lrs: "0.0001,7e-5,4.9e-5,3.43e-5,2.401e-5,1.6807e-5,1.17649e-5,1e-5,0.000007,0.0000049"
+
+# general args
+batch_size: 1
+epochs: 800
+
+# for model
+scales_filter_map: [[3., 1, -1, -1],
+                    [2., 1, -1, -1],
+                    [1., 1, 1, 1],
+                    [0.5, 1, 1, 1],
+                    [0.25, 1, 1, 1],
+                    [0.125, 1, 1, 1],
+                    [0.0625, 1, 1, 1],
+                    ]
+
+dim: 3
+num_points: 8192
+
+
+DEVICE: cuda
+
+evaluate: False
+
+dataset: FlyingThings3DSubset
+
+data_process:
+  DEPTH_THRESHOLD: 35.
+  NO_CORR: True
+
+# data augmentation
+aug_together:
+  degree_range: 0.1745329252
+  shift_range: 1.
+  scale_low: 0.95
+  scale_high: 1.05
+  jitter_sigma: 0.01
+  jitter_clip: 0.00
+
+aug_pc2:
+  degree_range: 0.
+  shift_range: 0.3
+  jitter_sigma: 0.01
+  jitter_clip: 0.00
+
+# miscalleneous
+print_freq: 50
+workers: 16
+
+
+
+
+
+
+
