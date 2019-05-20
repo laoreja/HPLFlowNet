@@ -3,10 +3,11 @@ This is the code for [HPLFlowNet](https://web.cs.ucdavis.edu/~yjlee/projects/cvp
 
 ## Prerequisites
 Our model is trained and tested under:
-* Python 3.5.2
+* Python 3.5.2 (testing under Python 3.6.5 also works)
 * NVIDIA GPU + CUDA CuDNN
 * PyTorch (torch == 0.4.0)
 * Numba (numba == 0.38.1)
+* You may need to install cffi.
 * Mayavi for visualization. Installation on Ubuntu:
 ```bash
 sudo apt-get -y install python-vtk
@@ -36,7 +37,7 @@ python3 data_preprocess/process_kitti.py RAW_DATA_PATH SAVE_PATH/KITTI_processed
 ## Get started
 Setup:
 ```bash
-cd models; python3 build_khash_cffi.py
+cd models; python3 build_khash_cffi.py; cd ..
 ```
 
 ### Train
