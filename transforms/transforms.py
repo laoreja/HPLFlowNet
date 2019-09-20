@@ -313,9 +313,11 @@ class GenerateDataUnsymmetric(object):
 
         el_minus_gr = elevated - greedy
         rank = torch.sort(el_minus_gr, dim=0, descending=True)[1]
-        # TODO: the following advanced indexing is different in PyTorch 0.4.0 and 1.0.0
-        # which makes PyTorch 1.0.0 fails
-        rank[rank, point_indices] = self.dim_indices
+        # the following advanced indexing is different in PyTorch 0.4.0 and 1.0.0
+        #rank[rank, point_indices] = self.dim_indices  # works in PyTorch 0.4.0 but fail in PyTorch 1.x
+        index = rank.clone()
+        rank[index, point_indices] = self.dim_indices  # works in PyTorch 1.x(has tested in PyTorch 1.2)
+        del index
 
         remainder_sum = greedy.sum(dim=0, keepdim=True) / self.d1
 
