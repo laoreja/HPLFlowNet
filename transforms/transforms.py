@@ -316,7 +316,7 @@ class GenerateDataUnsymmetric(object):
         # the following advanced indexing is different in PyTorch 0.4.0 and 1.0.0
         #rank[rank, point_indices] = self.dim_indices  # works in PyTorch 0.4.0 but fail in PyTorch 1.x
         index = rank.clone()
-        rank[index, point_indices] = self.dim_indices  # works in PyTorch 1.x(has tested in PyTorch 1.2)
+        rank[index, point_indices] = self.dim_indices  # works both in PyTorch 1.x(has tested in PyTorch 1.2) and PyTorch 0.4.0
         del index
 
         remainder_sum = greedy.sum(dim=0, keepdim=True) / self.d1
