@@ -25,7 +25,7 @@ def adjust_learning_rate(optimizer, epoch, args):
         lr = max(lr, args.lr_clip)
     # logger.log('lr: ' + str(lr))
 
-    reset_learning_rate(optimizer, lr)
+    reset_learning_rate(optimizer, args)
     # for param_group in optimizer.param_groups:
     #     param_group['lr'] = lr
 
