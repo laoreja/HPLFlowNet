@@ -1,4 +1,6 @@
 # self-defined
+configs/debug_*.yaml
+board
 trained_models/*.pth.tar
 test_key2int.py
 tmp.py
