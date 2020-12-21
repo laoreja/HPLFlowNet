@@ -5,6 +5,23 @@ import shutil
 import torch
 from torch.nn import init
 
+SAVE_CHECKPOINT_PERIOD = 10
+
+
+def parallelize(model):
+    """
+        Wrapper of torch.nn.DataParallel to abstract the support of one GPU, CPU and multiple GPUs
+    Args:
+        model:
+
+    Returns: potentially parallelized model
+
+    """
+    if torch.cuda.device_count() > 1:
+        return torch.nn.DataParallel(model)
+    else:
+        return model
+
 
 def reset_learning_rate(optimizer, args):
     for param_group in optimizer.param_groups:
@@ -12,22 +29,16 @@ def reset_learning_rate(optimizer, args):
 
 
 def adjust_learning_rate(optimizer, epoch, args):
-    # old_lr = optimizer.param_groups[0]['lr']
     if args.custom_lr:
-        # lr = args.lr
-        # try:
         pointer = next(x[0] for x in enumerate(args.lr_switch_epochs) if epoch >= x[1])
         lr = args.lrs[pointer]
-        # except StopIteration:
-        #     pass
     else:
         lr = args.lr * (args.lr_decay_rate ** (epoch // args.lr_decay_epochs))
         lr = max(lr, args.lr_clip)
-    # logger.log('lr: ' + str(lr))
 
-    reset_learning_rate(optimizer, args)
-    # for param_group in optimizer.param_groups:
-    #     param_group['lr'] = lr
+    # reset_learning_rate(optimizer, args)
+    for param_group in optimizer.param_groups:
+        param_group['lr'] = lr
 
 
 def init_weights_multi(m, init_type, gain=1.):
@@ -53,10 +64,10 @@ def init_weights_multi(m, init_type, gain=1.):
 # ---------------- Pretty sure the following functions/classes are common ----------------
 def save_checkpoint(state, is_best, ckpt_dir, filename='checkpoint.pth.tar'):
     torch.save(state, os.path.join(ckpt_dir, filename))
-    if state['epoch'] % 10 == 1:
+    if state['epoch'] % SAVE_CHECKPOINT_PERIOD == 1:
         shutil.copyfile(
             os.path.join(ckpt_dir, filename),
-            os.path.join(ckpt_dir, 'checkpoint_'+str(state['epoch'])+'.pth.tar'))
+            os.path.join(ckpt_dir, 'checkpoint_' + str(state['epoch']) + '.pth.tar'))
 
     if is_best:
         shutil.copyfile(
@@ -149,3 +160,40 @@ def query_yes_no(question, default="yes"):
         else:
             sys.stdout.write("Please respond with 'yes' or 'no' "
                              "(or 'y' or 'n').\n")
+
+
+def init_weight_fb(beg_scale_epoch, end_scale_epoch, step_size, args):
+    """
+    Method for initializing weight for FB loss based on current epoch
+
+    Scaling is linear before beg is 0
+    after beg scaled each epoch by step_size until end_scale_epoch
+
+    :param beg_scale_epoch:
+    :param end_scale_epoch:
+    :param step_size:
+    :param args:
+    """
+    weight_fb_cycle = 0
+    current_epoch = args.start_epoch + 1
+    if beg_scale_epoch <= current_epoch < end_scale_epoch:
+        weight_fb_cycle = (current_epoch - beg_scale_epoch) * step_size
+    if current_epoch >= end_scale_epoch:
+        weight_fb_cycle = (end_scale_epoch - beg_scale_epoch) * step_size
+
+    return weight_fb_cycle
+
+
+def adjust_weight_fb(epoch, weight_fb_cycle, beg_scale_epoch, end_scale_epoch, step_size):
+    """
+    Method for adjusting weight by adding step_size
+    :param epoch:
+    :param weight_fb_cycle:
+    :param beg_scale_epoch:
+    :param end_scale_epoch:
+    :param step_size:
+    :return:
+    """
+    if beg_scale_epoch <= epoch + 1 < end_scale_epoch:
+        weight_fb_cycle += step_size
+    return weight_fb_cycle

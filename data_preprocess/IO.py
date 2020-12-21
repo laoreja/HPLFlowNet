@@ -8,6 +8,7 @@ from scipy import misc
 import numpy as np
 from PIL import Image
 import sys
+import imageio
 
 
 def read(file):
@@ -121,13 +122,13 @@ def readImage(name):
         else:
             return data
 
-    return misc.imread(name)
+    return imageio.imread(name)
 
 def writeImage(name, data):
     if name.endswith('.pfm') or name.endswith('.PFM'):
         return writePFM(name, data, 1)
 
-    return misc.imsave(name, data)
+    return imageio.imsave(name, data)
 
 def writeFlow(name, flow):
     f = open(name, 'wb')

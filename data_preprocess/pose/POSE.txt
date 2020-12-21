@@ -1,0 +1,186 @@
+/home/ivan/Downloads/camera_data/TEST/A/0012/camera_data.txt
+TEST/A/0012 15
+
+/home/ivan/Downloads/camera_data/TEST/A/0033/camera_data.txt
+TEST/A/0033 15
+
+/home/ivan/Downloads/camera_data/TEST/A/0112/camera_data.txt
+TEST/A/0112 15
+
+/home/ivan/Downloads/camera_data/TEST/B/0135/camera_data.txt
+TEST/B/0135 15
+
+/home/ivan/Downloads/camera_data/TEST/C/0025/camera_data.txt
+TEST/C/0025 15
+
+/home/ivan/Downloads/camera_data/TEST/C/0033/camera_data.txt
+TEST/C/0033 15
+
+/home/ivan/Downloads/camera_data/TEST/C/0050/camera_data.txt
+TEST/C/0050 15
+
+/home/ivan/Downloads/camera_data/TEST/C/0064/camera_data.txt
+TEST/C/0064 15
+
+/home/ivan/Downloads/camera_data/TRAIN/A/0012/camera_data.txt
+TRAIN/A/0012 15
+
+/home/ivan/Downloads/camera_data/TRAIN/A/0014/camera_data.txt
+TRAIN/A/0014 15
+
+/home/ivan/Downloads/camera_data/TRAIN/A/0174/camera_data.txt
+TRAIN/A/0174 15
+
+/home/ivan/Downloads/camera_data/TRAIN/A/0179/camera_data.txt
+TRAIN/A/0179 15
+
+/home/ivan/Downloads/camera_data/TRAIN/A/0203/camera_data.txt
+TRAIN/A/0203 15
+
+/home/ivan/Downloads/camera_data/TRAIN/A/0380/camera_data.txt
+TRAIN/A/0380 15
+
+/home/ivan/Downloads/camera_data/TRAIN/A/0387/camera_data.txt
+TRAIN/A/0387 15
+
+/home/ivan/Downloads/camera_data/TRAIN/A/0598/camera_data.txt
+TRAIN/A/0598 15
+
+/home/ivan/Downloads/camera_data/TRAIN/A/0630/camera_data.txt
+TRAIN/A/0630 15
+
+/home/ivan/Downloads/camera_data/TRAIN/A/0675/camera_data.txt
+TRAIN/A/0675 15
+
+/home/ivan/Downloads/camera_data/TRAIN/B/0046/camera_data.txt
+TRAIN/B/0046 15
+
+/home/ivan/Downloads/camera_data/TRAIN/B/0083/camera_data.txt
+TRAIN/B/0083 15
+
+/home/ivan/Downloads/camera_data/TRAIN/B/0199/camera_data.txt
+TRAIN/B/0199 15
+
+/home/ivan/Downloads/camera_data/TRAIN/B/0285/camera_data.txt
+TRAIN/B/0285 15
+
+/home/ivan/Downloads/camera_data/TRAIN/B/0511/camera_data.txt
+TRAIN/B/0511 15
+
+/home/ivan/Downloads/camera_data/TRAIN/B/0520/camera_data.txt
+TRAIN/B/0520 15
+
+/home/ivan/Downloads/camera_data/TRAIN/B/0560/camera_data.txt
+TRAIN/B/0560 15
+
+/home/ivan/Downloads/camera_data/TRAIN/B/0618/camera_data.txt
+TRAIN/B/0618 15
+
+/home/ivan/Downloads/camera_data/TRAIN/B/0670/camera_data.txt
+TRAIN/B/0670 15
+
+/home/ivan/Downloads/camera_data/TRAIN/B/0690/camera_data.txt
+TRAIN/B/0690 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0004/camera_data.txt
+TRAIN/C/0004 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0040/camera_data.txt
+TRAIN/C/0040 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0061/camera_data.txt
+TRAIN/C/0061 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0069/camera_data.txt
+TRAIN/C/0069 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0074/camera_data.txt
+TRAIN/C/0074 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0110/camera_data.txt
+TRAIN/C/0110 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0155/camera_data.txt
+TRAIN/C/0155 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0159/camera_data.txt
+TRAIN/C/0159 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0160/camera_data.txt
+TRAIN/C/0160 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0237/camera_data.txt
+TRAIN/C/0237 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0244/camera_data.txt
+TRAIN/C/0244 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0287/camera_data.txt
+TRAIN/C/0287 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0299/camera_data.txt
+TRAIN/C/0299 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0334/camera_data.txt
+TRAIN/C/0334 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0357/camera_data.txt
+TRAIN/C/0357 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0361/camera_data.txt
+TRAIN/C/0361 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0389/camera_data.txt
+TRAIN/C/0389 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0397/camera_data.txt
+TRAIN/C/0397 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0429/camera_data.txt
+TRAIN/C/0429 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0433/camera_data.txt
+TRAIN/C/0433 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0437/camera_data.txt
+TRAIN/C/0437 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0475/camera_data.txt
+TRAIN/C/0475 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0483/camera_data.txt
+TRAIN/C/0483 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0487/camera_data.txt
+TRAIN/C/0487 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0501/camera_data.txt
+TRAIN/C/0501 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0549/camera_data.txt
+TRAIN/C/0549 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0551/camera_data.txt
+TRAIN/C/0551 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0580/camera_data.txt
+TRAIN/C/0580 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0640/camera_data.txt
+TRAIN/C/0640 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0642/camera_data.txt
+TRAIN/C/0642 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0675/camera_data.txt
+TRAIN/C/0675 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0684/camera_data.txt
+TRAIN/C/0684 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0738/camera_data.txt
+TRAIN/C/0738 15
+
+/home/ivan/Downloads/camera_data/TRAIN/C/0747/camera_data.txt
+TRAIN/C/0747 15
+

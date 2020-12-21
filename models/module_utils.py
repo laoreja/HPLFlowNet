@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 
 __all__ = ['Conv1dReLU', 'Conv2dReLU', 'Conv3dReLU']

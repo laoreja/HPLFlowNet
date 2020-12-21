@@ -1,0 +1,80 @@
+ckpt_dir: ${SCRATCH}/checkpoints/train/leon_RefRESH_${DATE}
+tf_board_dir: ${SCRATCH}/board/train/leon_RefRESH_${DATE}
+resume: ${CHECKPOINT_PATH}
+data_root: ${TMPDIR}
+
+# K PoseNet iterations
+pose_iterations: 5
+
+# Loss weighting
+loss_weights:
+  epe3d: 1
+  nn: 1
+  fb: 1
+  epe3d_nr: 1
+  rotation: 10
+  translation: 1
+# weight is scaled between [21, 41)
+fb_weight_scale: False
+fb_scale_beg: 21
+fb_scale_end: 41
+fb_scale_step: 0.1
+
+arch: HPLFlowPoseNet
+last_relu: False
+allow_less_points: False
+
+use_leaky: True
+bcn_use_bias: True
+bcn_use_norm: True
+
+custom_lr: True
+lr_switch_epochs: "0,85,120,155,190,225,260,295,330,365,400,435,470"
+lrs: "1e-05,7e-06,4.9e-06,3.43e-06,2.401e-06,1.681e-06,1.176e-06,8.235e-07,5.765e-07,4.035e-07,2.825e-07,1.977e-07,1.384e-07"
+
+# general args
+batch_size: 1
+epochs: 500
+
+# for model
+scales_filter_map: [[3., 1, -1, -1],
+                    [2., 1, -1, -1],
+                    [1., 1, 1, 1],
+                    [0.5, 1, 1, 1],
+                    [0.25, 1, 1, 1],
+                    [0.125, 1, 1, 1],
+                    [0.0625, 1, 1, 1],
+                    ]
+
+dim: 3
+num_points: 8192
+
+
+DEVICE: cuda
+
+evaluate: False
+
+dataset: RefRESHRigidity
+
+data_process:
+  DEPTH_THRESHOLD: 35.
+  NO_CORR: True
+
+# data augmentation
+aug_together:
+  degree_range: 0.1745329252
+  shift_range: 1.
+  scale_low: 0.95
+  scale_high: 1.05
+  jitter_sigma: 0.01
+  jitter_clip: 0.00
+
+aug_pc2:
+  degree_range: 0.
+  shift_range: 0.3
+  jitter_sigma: 0.01
+  jitter_clip: 0.00
+
+# miscalleneous
+print_freq: 50
+workers: 16

@@ -1,4 +1,18 @@
 import numpy as np
+from transforms3d import euler
+
+
+def evaluate_translation(t_pred, t_gt):
+    error = np.linalg.norm(t_gt - t_pred, axis=-1)
+    return error.mean()
+
+
+def evaluate_rotation(rot_pred, rot_gt):
+    if len(rot_gt.shape) == 3:
+        rot_gt = rot_gt[0]
+    R_pred = euler.euler2mat(rot_pred[0, 0], rot_pred[0, 1], rot_pred[0, 2])
+    R_gt = euler.euler2mat(rot_gt[0, 0], rot_gt[0, 1], rot_gt[0, 2])
+    return np.arccos((np.trace(np.dot(R_pred, R_gt.T)) - 1) / 2) * 180 / np.pi
 
 
 def evaluate_3d(sf_pred, sf_gt):
@@ -16,7 +30,7 @@ def evaluate_3d(sf_pred, sf_gt):
     acc3d_relax = (np.logical_or(l2_norm < 0.1, relative_err < 0.1)).astype(np.float).mean()
     outlier = (np.logical_or(l2_norm > 0.3, relative_err > 0.1)).astype(np.float).mean()
 
-    return EPE3D, acc3d_strict, acc3d_relax, outlier
+    return EPE3D, acc3d_strict, acc3d_relax, outlier, l2_norm
 
 
 def evaluate_2d(flow_pred, flow_gt):

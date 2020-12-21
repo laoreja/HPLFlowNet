@@ -1,6 +1,6 @@
-import numpy as np
-import os
 import os.path as osp
+import sys
+import numpy as np
 
 
 def get_batch_2d_flow(pc1, pc2, predicted_pc2, paths):
@@ -42,10 +42,17 @@ def get_batch_2d_flow(pc1, pc2, predicted_pc2, paths):
                                     constx=constx, consty=consty, constz=constz)
         px2_gt, py2_gt = project_3d_to_2d(pc2, f=focallengths, cx=cxs, cy=cys,
                                           constx=constx, consty=consty, constz=constz)
-    else:
+    elif 'FlyingThings3D' in paths[0]:
         px1, py1 = project_3d_to_2d(pc1)
         px2, py2 = project_3d_to_2d(predicted_pc2)
         px2_gt, py2_gt = project_3d_to_2d(pc2)
+    elif 'REFRESH' in paths[0] or 'RefRESH' in paths[0]:
+        px1, py1 = project_3d_to_2d(pc1, f=583, cx=320, cy=240)
+        px2, py2 = project_3d_to_2d(predicted_pc2, f=583, cx=320, cy=240)
+        px2_gt, py2_gt = project_3d_to_2d(pc2, f=583, cx=320, cy=240)
+    else:
+        print("Evaluating on an unsupported dataset. Exiting")
+        sys.exit(1)
 
     flow_x = px2 - px1
     flow_y = py2 - py1

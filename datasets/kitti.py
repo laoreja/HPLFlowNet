@@ -1,7 +1,7 @@
-import sys, os
+import os
 import os.path as osp
-import numpy as np
 
+import numpy as np
 import torch.utils.data as data
 
 __all__ = ['KITTI']
@@ -20,9 +20,9 @@ class KITTI(data.Dataset):
                  train,
                  transform,
                  gen_func,
-                 args
-                 ):
+                 args):
         self.root = osp.join(args.data_root, 'KITTI_processed_occ_final')
+        # Comment assert below to allow training on KITTI
         assert train is False
         self.train = train
         self.transform = transform
@@ -39,7 +39,7 @@ class KITTI(data.Dataset):
 
     def __getitem__(self, index):
         pc1_loaded, pc2_loaded = self.pc_loader(self.samples[index])
-        pc1_transformed, pc2_transformed, sf_transformed = self.transform([pc1_loaded, pc2_loaded])
+        pc1_transformed, pc2_transformed, sf_transformed = self.transform.process_inference([pc1_loaded, pc2_loaded])
         if pc1_transformed is None:
             print('path {} get pc1 is None'.format(self.samples[index]), flush=True)
             index = np.random.choice(range(self.__len__()))
@@ -49,7 +49,7 @@ class KITTI(data.Dataset):
                                                       pc2_transformed,
                                                       sf_transformed])
 
-        return pc1, pc2, sf, generated_data, self.samples[index]
+        return pc1, pc2, np.empty(0), np.empty(0), np.empty(0), sf, generated_data, self.samples[index]
 
     def __repr__(self):
         fmt_str = 'Dataset ' + self.__class__.__name__ + '\n'

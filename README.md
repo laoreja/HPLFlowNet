@@ -19,11 +19,13 @@ sudo apt-get -y install python-vtk
 sudo pip3 install mayavi
 sudo apt-get install python3-pyqt5
 sudo pip3 install PyQt5
+pip3 install imageio
+pip3 install tensorboard
 ```
 
 ## Data preprocess
 
-* FlyingThings3D:
+### FlyingThings3D
 Download and unzip the "Disparity", "Disparity Occlusions", "Disparity change", "Optical flow", "Flow Occlusions" for DispNet/FlowNet2.0 dataset subsets from the [FlyingThings3D website](https://lmb.informatik.uni-freiburg.de/resources/datasets/SceneFlowDatasets.en.html) (we used the paths from [this file](https://lmb.informatik.uni-freiburg.de/data/FlyingThings3D_subset/FlyingThings3D_subset_all_download_paths.txt), now they added torrent downloads)
 . They will be upzipped into the same directory, `RAW_DATA_PATH`. Then run the following script for 3D reconstruction:
 
@@ -31,12 +33,20 @@ Download and unzip the "Disparity", "Disparity Occlusions", "Disparity change", 
 python3 data_preprocess/process_flyingthings3d_subset.py --raw_data_path RAW_DATA_PATH --save_path SAVE_PATH/FlyingThings3D_subset_processed_35m --only_save_near_pts
 ```
 
-* KITTI Scene Flow 2015
+### KITTI Scene Flow 2015
 Download and unzip [KITTI Scene Flow Evaluation 2015](http://www.cvlibs.net/download.php?file=data_scene_flow.zip) to directory `RAW_DATA_PATH`.
 Run the following script for 3D reconstruction:
 
 ```bash
 python3 data_preprocess/process_kitti.py RAW_DATA_PATH SAVE_PATH/KITTI_processed_occ_final
+```
+
+### RefRESH
+Download ZIPs of all scenes from [RefRESH Google doc](https://drive.google.com/drive/folders/1Im1_ehSg4ALzeGctYGzvUv9KhcRlHXu_).
+Unzip all of the scenes into the same directory, `RAW_DATA_PATH`. Then run the following script for 3D reconstruction:
+
+```bash
+python3 data_preprocess/process_refresh_rigidity.py --raw_data_path RAW_DATA_PATH --save_path SAVE_PATH/REFRESH_pc --only_save_near_pts
 ```
 
 ## Get started

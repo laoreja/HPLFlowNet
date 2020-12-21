@@ -1,15 +1,10 @@
-import os, sys
-import os.path as osp
-from collections import defaultdict
-import numbers
 import math
-import numpy as np
-import traceback
-import time
-
-import torch
+import os.path as osp
+import sys
 
 import numba
+import numpy as np
+import torch
 from numba import njit, cffi_support
 
 from . import functional as F
@@ -286,15 +281,18 @@ class GenerateDataUnsymmetric(object):
 
         self.dim_indices = torch.arange(d + 1, dtype=torch.long)[:, None]
 
+        # Build offset matrices needed for correlation operation. p x d where p is patch size
         self.radius2offset = {}
         radius_set = set([item for line in self.scales_filter_map for item in line[1:] if item != -1])
 
+        # go over all hops
         for radius in radius_set:
             hash_table = []
             center = np.array([0] * self.d1, dtype=np.long)
-
+            # traverse all neighbours with #hops = radius
             traversal = Traverse(radius, self.d)
             traversal.go(center, hash_table)
+            # hash_table contains lattice offset to get from get to neighbours from center
             self.radius2offset[radius] = np.vstack(hash_table)
 
     def get_keys_and_barycentric(self, pc):
@@ -306,34 +304,47 @@ class GenerateDataUnsymmetric(object):
         num_points = pc.size(-1)
         point_indices = torch.arange(num_points, dtype=torch.long)[None, :]
 
+        # Embed position vector p into H_d d+1 dimensional hyperplane to get vector x
         elevated = torch.matmul(self.elevate_mat, pc) * self.expected_std  # (d+1, N)
 
         # find 0-remainder
+        # See Conway and Sloane 2010 p447-p448 Step1 - Step4
+        # find l_0 closest zero remainder by rounding to nearest multiple of d + 1
         greedy = torch.round(elevated / self.d1) * self.d1  # (d+1, N)
 
+        # compute the residual x - l_0
         el_minus_gr = elevated - greedy
+        # Step 3 p448
+        # sort by dimensions for each residual and get the indices of the original data
+        # rank residuals to find the permutation between this simplex and the canonical simplex
         rank = torch.sort(el_minus_gr, dim=0, descending=True)[1]
         # the following advanced indexing is different in PyTorch 0.4.0 and 1.0.0
-        #rank[rank, point_indices] = self.dim_indices  # works in PyTorch 0.4.0 but fail in PyTorch 1.x
+        # rank[rank, point_indices] = self.dim_indices  # works in PyTorch 0.4.0 but fail in PyTorch 1.x
+        # works both in PyTorch 1.x(has tested in PyTorch 1.2) and PyTorch 0.4.0
         index = rank.clone()
-        rank[index, point_indices] = self.dim_indices  # works both in PyTorch 1.x(has tested in PyTorch 1.2) and PyTorch 0.4.0
+        rank[index, point_indices] = self.dim_indices
         del index
 
+        # Step 2 p447
         remainder_sum = greedy.sum(dim=0, keepdim=True) / self.d1
 
         rank_float = rank.type(torch.float32)
+        # Step 4 p448
         cond_mask = ((rank_float >= self.d1 - remainder_sum) * (remainder_sum > 0) + \
                      (rank_float < -remainder_sum) * (remainder_sum < 0)) \
             .type(torch.float32)
+        # Too large sum => point is of the plane => bring down
         sum_gt_zero_mask = (remainder_sum > 0).type(torch.float32)
+        # Too small sum => point is of the plane => bring up
         sum_lt_zero_mask = (remainder_sum < 0).type(torch.float32)
         sign_mask = -1 * sum_gt_zero_mask + sum_lt_zero_mask
 
         greedy += self.d1 * sign_mask * cond_mask
         rank += (self.d1 * sign_mask * cond_mask).type_as(rank)
         rank += remainder_sum.type(torch.long)
+        # rank now contains the permutation between this simplex and the canonical one.
 
-        # barycentric
+        # Compute barycentric coordinates
         el_minus_gr = elevated - greedy
         greedy = greedy.type(torch.long)
 
@@ -344,6 +355,11 @@ class GenerateDataUnsymmetric(object):
         barycentric[0, point_indices] += 1. + barycentric[self.d1, point_indices]
         barycentric = barycentric[:-1, :]
 
+        # Compute the location of the lattice point explicitly
+        # self.canonical[rank, :] has the permutation of vertices of the canonical simplex
+        # greedy[:, :, None] has the coordinates of closer l_0 reminder
+        # permute the canonical simplex vertices and translate them by l_o
+        # store corresponding to simplex vertices
         keys = greedy[:, :, None] + self.canonical[rank, :]  # (d1, num_points, d1)
         # rank: rearrange the coordinates of the canonical
 
@@ -355,15 +371,22 @@ class GenerateDataUnsymmetric(object):
     def get_filter_size(self, radius):
         return (radius + 1) ** self.d1 - radius ** self.d1
 
-    def __call__(self, data):
+    def compute_generated_data(self, pc1, pc2, layer_num):
+        _, _, _, generated_data = self.__call__([pc1, pc2, None], layer_num=layer_num)
+        return generated_data
+
+    def __call__(self, data, layer_num=None, with_debug_output=False):
         pc1, pc2, sf = data
         if pc1 is None:
             return None, None, None, None
 
         with torch.no_grad():
-            pc1 = torch.from_numpy(pc1.T)
-            pc2 = torch.from_numpy(pc2.T)
-            sf = torch.from_numpy(sf.T)
+            if type(pc1) is np.ndarray:
+                pc1 = torch.from_numpy(pc1.T)
+            if type(pc2) is np.ndarray:
+                pc2 = torch.from_numpy(pc2.T)
+            if type(sf) is np.ndarray:
+                sf = torch.from_numpy(sf.T)
 
             generated_data = []
             last_pc1 = pc1.clone()
@@ -371,8 +394,9 @@ class GenerateDataUnsymmetric(object):
             pc1_num_points = pc1.size(-1)
             pc2_num_points = pc2.size(-1)
 
-            for idx, (scale, bcn_filter_raidus, corr_filter_radius, corr_corr_radius) in enumerate(
-                    self.scales_filter_map):
+            layers = self.scales_filter_map[0:layer_num] if layer_num else self.scales_filter_map
+
+            for idx, (scale, bcn_filter_raidus, corr_filter_radius, corr_corr_radius) in enumerate(layers):
 
                 last_pc1[:3, :] *= scale
                 last_pc2[:3, :] *= scale
@@ -381,12 +405,15 @@ class GenerateDataUnsymmetric(object):
                 pc2_keys_np, pc2_barycentric, pc2_el_minus_gr = self.get_keys_and_barycentric(last_pc2)
                 # keys: (d1, N, d1) [[:, point_idx, remainder_idx]], barycentric: (d1, N), el_minus_gr: (d1, N)
 
+                # maximum in each dimension along enclosing vertices of both pc1 and pc2
                 key_maxs = np.maximum(pc1_keys_np.max(-1).max(-1), pc2_keys_np.max(-1).max(-1))
+                # minimum in each dimension along enclosing vertices of both pc1 and pc2
                 key_mins = np.minimum(pc1_keys_np.min(-1).min(-1), pc2_keys_np.min(-1).min(-1))
 
+                # contains a set of unique simplex vertex coordinates
                 pc1_keys_set = set(map(tuple, pc1_keys_np.reshape(self.d1, -1).T))
                 pc2_keys_set = set(map(tuple, pc2_keys_np.reshape(self.d1, -1).T))
-
+                # hash_cnt contains the number of points which receive a signal during splatting
                 pc1_hash_cnt = len(pc1_keys_set)
                 pc2_hash_cnt = len(pc2_keys_set)
 
@@ -422,7 +449,7 @@ class GenerateDataUnsymmetric(object):
                     pc2_corr_indices = np.zeros((1, 1, 1), dtype=np.int64)
                     corr_filter_offsets, corr_corr_offsets = np.zeros((1, 1), dtype=np.int64), np.zeros((1, 1),
                                                                                                         dtype=np.int64)
-                if idx != len(self.scales_filter_map) - 1:
+                if idx != len(layers) - 1:
                     last_pc1 = np.empty((self.d1, pc1_hash_cnt), dtype=np.float32)
                     last_pc2 = np.empty((self.d1, pc2_hash_cnt), dtype=np.float32)
                 else:
@@ -439,7 +466,7 @@ class GenerateDataUnsymmetric(object):
                                   corr_filter_offsets, corr_corr_offsets,
                                   pc1_corr_indices, pc2_corr_indices,
                                   last_pc1, last_pc2,
-                                  idx != len(self.scales_filter_map) - 1)
+                                  idx != len(layers) - 1)
 
                 pc1_lattice_offset = torch.from_numpy(pc1_lattice_offset)
                 pc2_lattice_offset = torch.from_numpy(pc2_lattice_offset)
@@ -458,15 +485,21 @@ class GenerateDataUnsymmetric(object):
                     pc1_corr_indices = torch.zeros(1, dtype=torch.long)
                     pc2_corr_indices = torch.zeros(1, dtype=torch.long)
 
-                if idx != len(self.scales_filter_map) - 1:
+                if idx != len(layers) - 1:
                     last_pc1 = torch.from_numpy(last_pc1)
                     last_pc2 = torch.from_numpy(last_pc2)
+                    if with_debug_output:
+                        coords_pc1 = last_pc1.clone().long()
+                        coords_pc2 = last_pc2.clone().long()
                     last_pc1 /= self.expected_std * scale
                     last_pc2 /= self.expected_std * scale
                     last_pc1 = torch.matmul(self.elevate_mat.t(), last_pc1)
                     last_pc2 = torch.matmul(self.elevate_mat.t(), last_pc2)
                     pc1_num_points = pc1_hash_cnt
                     pc2_num_points = pc2_hash_cnt
+                    if with_debug_output:
+                        points_pc1 = last_pc1.clone()
+                        points_pc2 = last_pc2.clone()
 
                 generated_data.append({'pc1_barycentric': pc1_barycentric,
                                        'pc2_barycentric': pc2_barycentric,
@@ -481,6 +514,11 @@ class GenerateDataUnsymmetric(object):
                                        'pc1_hash_cnt': pc1_hash_cnt,
                                        'pc2_hash_cnt': pc2_hash_cnt,
                                        })
+                if with_debug_output:
+                    generated_data[-1]['last_pc1'] = points_pc1
+                    generated_data[-1]['last_pc2'] = points_pc2
+                    generated_data[-1]['coords_pc1'] = coords_pc1
+                    generated_data[-1]['coords_pc2'] = coords_pc2
 
             return pc1, pc2, sf, generated_data
 
@@ -498,10 +536,10 @@ class ProcessData(object):
         self.num_points = num_points
         self.allow_less_points = allow_less_points
 
-    def __call__(self, data):
+    def process_inference(self, data):
         pc1, pc2 = data
         if pc1 is None:
-            return None, None, None,
+            return None, None, None
 
         sf = pc2[:, :3] - pc1[:, :3]
 
@@ -509,6 +547,7 @@ class ProcessData(object):
             near_mask = np.logical_and(pc1[:, 2] < self.DEPTH_THRESHOLD, pc2[:, 2] < self.DEPTH_THRESHOLD)
         else:
             near_mask = np.ones(pc1.shape[0], dtype=np.bool)
+
         indices = np.where(near_mask)[0]
         if len(indices) == 0:
             print('indices = np.where(mask)[0], len(indices) == 0')
@@ -537,6 +576,56 @@ class ProcessData(object):
         pc2 = pc2[sampled_indices2]
 
         return pc1, pc2, sf
+
+    def __call__(self, data):
+        pc1, pc2, R_rel, t_rel = data
+        if pc1 is None:
+            return None, None, None, None, None, None
+
+        # Warp pc1 with [R t] relative to get pc1_cm
+        pc1_cm = np.dot(R_rel, pc1.T).T + t_rel
+
+        # Compute sf_nr and sf_total
+        sf_nr = pc2[:, :3] - pc1_cm[:, :3]
+        sf_total = pc2[:, :3] - pc1[:, :3]
+
+        if self.DEPTH_THRESHOLD > 0:
+            near_mask = np.logical_and(
+                np.logical_and(pc1[:, 2] < self.DEPTH_THRESHOLD, pc2[:, 2] < self.DEPTH_THRESHOLD),
+                pc1_cm[:, 2] < self.DEPTH_THRESHOLD
+            )
+        else:
+            near_mask = np.ones(pc1.shape[0], dtype=np.bool)
+
+        indices = np.where(near_mask)[0]
+        if len(indices) == 0:
+            print('indices = np.where(mask)[0], len(indices) == 0')
+            return None, None, None, None, None, None
+
+        if self.num_points > 0:
+            try:
+                sampled_indices1 = np.random.choice(indices, size=self.num_points, replace=False, p=None)
+                if self.no_corr:
+                    sampled_indices2 = np.random.choice(indices, size=self.num_points, replace=False, p=None)
+                else:
+                    sampled_indices2 = sampled_indices1
+            except ValueError:
+                if not self.allow_less_points:
+                    print('Cannot sample {} points'.format(self.num_points))
+                    return None, None, None, None, None, None
+                else:
+                    sampled_indices1 = indices
+                    sampled_indices2 = indices
+        else:
+            sampled_indices1 = indices
+            sampled_indices2 = indices
+
+        pc1 = pc1[sampled_indices1]
+        sf_nr = sf_nr[sampled_indices1]
+        sf_total = sf_total[sampled_indices1]
+        pc2 = pc2[sampled_indices2]
+
+        return pc1, pc2, R_rel, t_rel, sf_nr, sf_total
 
     def __repr__(self):
         format_string = self.__class__.__name__ + '\n(data_process_args: \n'
@@ -558,9 +647,9 @@ class Augmentation(object):
         self.allow_less_points = allow_less_points
 
     def __call__(self, data):
-        pc1, pc2 = data
+        pc1, pc2, R_rel, t_rel = data
         if pc1 is None:
-            return None, None, None
+            return None, None, None, None, None, None
 
         # together, order: scale, rotation, shift, jitter
         # scale
@@ -575,7 +664,7 @@ class Augmentation(object):
         rot_matrix = np.array([[cosval, 0, sinval],
                                [0, 1, 0],
                                [-sinval, 0, cosval]], dtype=np.float32)
-        matrix = scale.dot(rot_matrix.T)
+        matrix = np.dot(rot_matrix, scale)
 
         # shift
         shifts = np.random.uniform(-self.together_args['shift_range'],
@@ -588,8 +677,12 @@ class Augmentation(object):
                          self.together_args['jitter_clip']).astype(np.float32)
         bias = shifts + jitter
 
-        pc1[:, :3] = pc1[:, :3].dot(matrix) + bias
-        pc2[:, :3] = pc2[:, :3].dot(matrix) + bias
+        # augmentations pc1, pc2
+        pc1[:, :3] = pc1[:, :3].dot(rot_matrix.T) + bias
+        pc2[:, :3] = pc2[:, :3].dot(rot_matrix.T) + bias
+        # augmentations R_rel, t_rel
+        R_rel = np.dot(np.dot(rot_matrix, R_rel), rot_matrix.T)
+        t_rel = np.dot(rot_matrix, t_rel) + np.dot(np.eye(3) - R_rel, bias[0])
 
         # pc2, order: rotation, shift, jitter
         # rotation
@@ -605,24 +698,37 @@ class Augmentation(object):
                                     self.pc2_args['shift_range'],
                                     (1, 3)).astype(np.float32)
 
+        # augmentations pc2
         pc2[:, :3] = pc2[:, :3].dot(matrix2.T) + shifts2
-        sf = pc2[:, :3] - pc1[:, :3]
+        # augmentations R_rel, t_rel
+        R_rel = np.dot(matrix2, R_rel)
+        t_rel = np.dot(matrix2, t_rel) + shifts2[0]
 
         if not self.no_corr:
             jitter2 = np.clip(self.pc2_args['jitter_sigma'] * np.random.randn(pc1.shape[0], 3),
                               -self.pc2_args['jitter_clip'],
                               self.pc2_args['jitter_clip']).astype(np.float32)
             pc2[:, :3] += jitter2
+            t_rel += jitter2[0]
+
+        # Warp pc1 with [R t] relative to get pc1_cm
+        pc1_cm = np.dot(R_rel, pc1.T).T + t_rel
+        # Compute sf_nr = p2 - pc1_cm
+        sf_total = pc2[:, :3] - pc1[:, :3]
+        sf_nr = pc2[:, :3] - pc1_cm[:, :3]
 
         if self.DEPTH_THRESHOLD > 0:
-            near_mask = np.logical_and(pc1[:, 2] < self.DEPTH_THRESHOLD, pc2[:, 2] < self.DEPTH_THRESHOLD)
+            near_mask = np.logical_and(
+                np.logical_and(pc1[:, 2] < self.DEPTH_THRESHOLD, pc2[:, 2] < self.DEPTH_THRESHOLD),
+                pc1_cm[:, 2] < self.DEPTH_THRESHOLD
+            )
         else:
             near_mask = np.ones(pc1.shape[0], dtype=np.bool)
 
         indices = np.where(near_mask)[0]
         if len(indices) == 0:
             print('indices = np.where(mask)[0], len(indices) == 0')
-            return None, None, None
+            return None, None, None, None, None, None
 
         if self.num_points > 0:
             try:
@@ -634,7 +740,7 @@ class Augmentation(object):
             except ValueError:
                 if not self.allow_less_points:
                     print('Cannot sample {} points'.format(self.num_points))
-                    return None, None, None
+                    return None, None, None, None, None, None
                 else:
                     sampled_indices1 = indices
                     sampled_indices2 = indices
@@ -643,10 +749,11 @@ class Augmentation(object):
             sampled_indices2 = indices
 
         pc1 = pc1[sampled_indices1]
+        sf_nr = sf_nr[sampled_indices1]
+        sf_total = sf_total[sampled_indices1]
         pc2 = pc2[sampled_indices2]
-        sf = sf[sampled_indices1]
 
-        return pc1, pc2, sf
+        return pc1, pc2, R_rel, t_rel, sf_nr, sf_total
 
     def __repr__(self):
         format_string = self.__class__.__name__ + '\n(together_args: \n'

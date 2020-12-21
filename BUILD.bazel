@@ -1,0 +1,60 @@
+load("@rules_python//python:defs.bzl", "py_library")
+
+package(
+    default_visibility = ["//visibility:public"],
+)
+
+# Binaries
+py_binary(
+    name = "process_flyingthings3d_subset",
+    srcs = [
+        "data_preprocess/IO.py",
+        "data_preprocess/flyingthings3d_utils.py",
+        "data_preprocess/process_flyingthings3d_subset.py",
+    ],
+)
+
+py_binary(
+    name = "process_kitti",
+    srcs = [
+        "data_preprocess/IO.py",
+        "data_preprocess/kitti_utils.py",
+        "data_preprocess/process_kitti.py",
+    ],
+)
+
+py_binary(
+    name = "main",
+    srcs = ["main.py"],
+    deps = [
+        ":hplflownet",
+    ],
+)
+
+py_binary(
+    name = "visualization",
+    srcs = ["visualization.py"],
+    deps = [
+        ":hplflownet",
+    ],
+)
+
+# Libraries
+py_library(
+    name = "hplflownet",
+    srcs = glob([
+        "data_preprocess/*.py",
+        "datasets/*.py",
+        "models/*.py",
+        "transforms/*.py",
+        "utils/*.py",
+    ]) + [
+        "main_utils.py",
+    ],
+    data = glob([
+        "models/*.so",
+    ]),
+    imports = ["."],
+)
+
+# Tests
