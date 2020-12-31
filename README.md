@@ -45,6 +45,8 @@ Setup:
 cd models; python3 build_khash_cffi.py; cd ..
 ```
 
+Out trained model can be downloaded in the `trained_models` folder (https://github.com/laoreja/HPLFlowNet/tree/master/trained_models).
+
 ### Train
 Set `data_root` in the configuration file to `SAVE_PATH` in the data preprocess section. Then run
 ```bash
