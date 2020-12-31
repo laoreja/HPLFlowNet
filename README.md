@@ -5,7 +5,7 @@ This is the code for [HPLFlowNet](https://web.cs.ucdavis.edu/~yjlee/projects/cvp
 Our model is trained and tested under:
 * Python 3.5.2 (testing under Python 3.6.5 also works)
 * NVIDIA GPU + CUDA CuDNN
-* PyTorch (torch == 0.4.0)
+* PyTorch (torch == 0.4.0) (Should also support PyTorch 1.0 now)
 * Numba (numba == 0.38.1)
 * You may need to install cffi.
 * Mayavi for visualization. 
