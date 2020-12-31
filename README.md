@@ -45,21 +45,22 @@ Setup:
 cd models; python3 build_khash_cffi.py; cd ..
 ```
 
-Out trained model can be downloaded in the [`trained_models` folder](https://github.com/laoreja/HPLFlowNet/tree/master/trained_models).
+### Trained models
+Out trained model can be downloaded in the [`trained_models`](https://github.com/laoreja/HPLFlowNet/tree/master/trained_models) folder.
 
-### Train
-Set `data_root` in the configuration file to `SAVE_PATH` in the data preprocess section. Then run
-```bash
-python3 main.py configs/train_xxx.yaml
-```
-
-### Test
+### Inference
 Set `data_root` in the configuration file to `SAVE_PATH` in the data preprocess section. Set `resume` to be the path of your trained model or our trained model in `trained_models`. Then run
 ```bash
 python3 main.py configs/test_xxx.yaml
 ```
 
 Current implementation only supports `batch_size=1`.
+
+### Train
+Set `data_root` in the configuration file to `SAVE_PATH` in the data preprocess section. Then run
+```bash
+python3 main.py configs/train_xxx.yaml
+```
 
 ### Visualization
 If you set `TOTAL_NUM_SAMPLES` in `evaluation_bnn.py` to be larger than 0. Sampled results will be saved in a subdir of your checkpoint directory, `VISU_DIR`.
